@@ -1,0 +1,39 @@
+syntax = "proto3";
+package pb;
+
+message Entries {
+    uint64 Term = 1;
+    uint64 LogIdx = 2;
+    string Data = 3;
+}
+
+message AppendEntriesReq {
+    uint64 Term = 1;
+    uint32 LeaderId = 2;
+    uint64 PrevLogTerm = 3;
+    uint64 PrevLogIdx = 4;
+    uint64 LeaderCommitLogIdx = 5;
+    repeated Entries entries = 6;
+}
+
+message AppendEntriesRsp{
+    uint64 Term = 1;
+    int32 RetCode = 2;
+}
+
+message VoteReq{
+    uint64 Term = 1;
+    uint32 CandiId = 2;
+    uint64 LastLogIdx = 3;
+    uint64 LastLogTerm = 4;
+}
+
+message VoteRsp {
+    uint64 Term = 1;
+    int32 VoteGranted = 2;
+}
+
+service Peer{
+    rpc AppendEntries(AppendEntriesReq) returns (AppendEntriesRsp);
+    rpc Vote(VoteReq) returns (VoteRsp);
+}
