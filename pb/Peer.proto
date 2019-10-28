@@ -5,6 +5,7 @@ message Entries {
     uint64 Term = 1;
     uint64 LogIdx = 2;
     string Data = 3;
+    string k = 4;
 }
 
 message AppendEntriesReq {

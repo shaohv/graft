@@ -6,7 +6,6 @@ import (
 	"log"
 	"sync"
 	"testing"
-	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -16,8 +15,8 @@ func TestRpcVote(t *testing.T) {
 	const server = "127.0.0.1:8788"
 	var servC = make(chan *grpc.Server, 1)
 	go StartGrpcServer(server, servC)
+	s := <-servC
 
-	time.Sleep(10 * time.Second)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -41,7 +40,6 @@ func TestRpcVote(t *testing.T) {
 	}(server)
 
 	wg.Wait()
-	s := <-servC
 	s.Stop()
 }
 
@@ -49,8 +47,8 @@ func TestRpcAppendEnties(t *testing.T) {
 	const server = "127.0.0.1:8788"
 	var servC = make(chan *grpc.Server, 1)
 	go StartGrpcServer(server, servC)
+	s := <-servC
 
-	time.Sleep(10 * time.Second)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -64,7 +62,6 @@ func TestRpcAppendEnties(t *testing.T) {
 		}
 		defer client.DelPeer()
 
-		log.Println("ssss")
 		req := &pb.AppendEntriesReq{}
 		rsp, err := client.Cli.AppendEntries(context.Background(), req)
 		if err != nil {
@@ -75,6 +72,5 @@ func TestRpcAppendEnties(t *testing.T) {
 	}(server)
 
 	wg.Wait()
-	s := <-servC
 	s.Stop()
 }
