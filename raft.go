@@ -9,7 +9,7 @@ import (
 
 const (
 	// ElectTime ...
-	ElectTime = time.Millisecond * 150
+	ElectTime = 150
 	HbTime    = time.Second * 5
 )
 
@@ -25,6 +25,11 @@ const (
 	LEADER
 )
 
+var (
+	ErrNotLeader = errors.New("Raft server not leader!")
+	ErrStop      = errors.New("Raft server stopped!")
+)
+
 // KVd 对外的
 type KvsReq struct {
 	k string
@@ -34,6 +39,12 @@ type KvsReq struct {
 type KvsRsp struct {
 	RetCode int32
 	LogIdx  uint64
+}
+
+type message struct {
+	args  interface{}
+	reply interface{}
+	err   chan error
 }
 
 type Raft struct {
@@ -49,8 +60,8 @@ type Raft struct {
 
 	Peers []*PeerCli
 
-	blockQ chan pb.Entries // receive KvsReq from KV service layer, leader
-	applyR chan KvsRsp     // response KvsRsp to KV service layer, leader
+	blockQ chan *message //leader rcv KvsReq from KV service layer or follower rcv Req from leader
+	applyR chan KvsRsp   // response KvsRsp to KV service layer, leader
 
 	perstQ chan pb.Entries // send entries to persist layer, every node
 
@@ -75,7 +86,7 @@ func NewRaft(ps []*PeerCli, stor Stor) *Raft {
 		MatchIdx: 0,
 		Peers:    ps,
 
-		blockQ: make(chan pb.Entries, 256),
+		blockQ: make(chan *message, 256),
 		applyR: make(chan KvsRsp, 256),
 		stopC:  make(chan int),
 
@@ -126,4 +137,31 @@ func (r *Raft) eventLoop() {
 			r.leaderLoop()
 		}
 	}
+}
+
+func (rf *Raft) deliver(value interface{}, r interface{}) error {
+	if rf.state != RUNNING {
+		return ErrStop
+	}
+
+	task := &message{args: value, reply: r, err: make(chan error, 1)}
+
+	//deliver the task to event loop
+	select {
+	case rf.blockQ <- task:
+	case <-rf.stopC:
+		return ErrStop
+	}
+	// wait for the task been handle over, and return
+	select {
+	case <-rf.stopC:
+		return ErrStop
+	case suc := <-task.err:
+		return suc
+	}
+}
+
+func (rf *Raft) changeState(state int) {
+	rf.state = state
+	// 持久化
 }
