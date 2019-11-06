@@ -4,13 +4,12 @@ import (
 	"errors"
 	"graft/pb"
 	"log"
-	"time"
 )
 
 const (
 	// ElectTime ...
 	ElectTime = 150
-	HbTime    = time.Second * 5
+	HbTime    = 5
 )
 
 const (
