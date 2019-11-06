@@ -3,14 +3,7 @@ package graft
 import (
 	pb "graft/pb"
 	"log"
-	"math/rand"
-	"time"
 )
-
-func randomTmout(t int) <-chan time.Time {
-	electTmout := rand.Intn(t) + t
-	return time.After(time.Duration(electTmout) * time.Millisecond)
-}
 
 func (r *Raft) handleTask(task *message) {
 	var err error
@@ -21,6 +14,8 @@ func (r *Raft) handleTask(task *message) {
 	case *pb.VoteReq:
 		rsp, _ := (task.reply).(*pb.VoteRsp)
 		*rsp, _ = r.handleVote(req)
+		//case *KvsReq:
+
 	}
 
 	task.err <- err
@@ -33,7 +28,6 @@ func (r *Raft) handleTask(task *message) {
 */
 func (r *Raft) followerLoop() {
 	var electTmout = randomTmout(ElectTime)
-	var err error
 
 	for r.state == FOLLOWER {
 		update := false

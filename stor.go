@@ -21,8 +21,10 @@ type Stor interface {
 	AppendEntries(es []pb.Entries) error
 
 	// DelInvalidEntries
-	DelInvalidEntries(es []pb.Entries) error
+	DelInvalidEntries(idx uint64) error
 
 	// LoadData 加载数据
 	LoadData() ([]pb.Entries, error)
+
+	GetEntryByIdx(idx uint64) (pb.Entries, error)
 }

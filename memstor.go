@@ -1,6 +1,7 @@
 package graft
 
 import (
+	"errors"
 	pb "graft/pb"
 	"log"
 )
@@ -51,11 +52,21 @@ func (s *MemStor) AppendEntries(es []pb.Entries) error {
 }
 
 // DelInvalidEntries
-func (s *MemStor) DelInvalidEntries(es []pb.Entries) error {
+func (s *MemStor) DelInvalidEntries(idx uint64) error {
+	s.log = s.log[:idx-1]
 	return nil
 }
 
 // LoadData 加载数据
 func (s *MemStor) LoadData() ([]pb.Entries, error) {
 	return s.log, nil
+}
+
+func (s *MemStor) GetEntryByIdx(idx uint64) (pb.Entries, error) {
+	if idx >= uint64(len(s.log)) {
+		log.Printf("idx too large, idx=%v", idx)
+		return pb.Entries{}, errors.New("idx too large")
+	}
+
+	return s.log[idx], nil
 }
